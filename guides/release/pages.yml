@@ -65,8 +65,12 @@
       url: "actions"
     - title: "Yields"
       url: "yields"
-    - title: "Closure Components"
-      url: "closure-components"
+    - title: "Interacting with the DOM"
+      url: "interacting-with-the-dom"
+    - title: "Contextual Components"
+      url: "contextual-components"
+    - title: "Classic Components"
+      url: "classsic-components"
 - title: "Routing"
   url: 'routing'
   pages:

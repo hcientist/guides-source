@@ -1,52 +1,163 @@
-Components can have properties passed in ([Passing Properties to a Component](../passing-arguments-and-html-attributes/)),
-but they can also return output to be used in a block expression.
+We've mentioned a few times that components can be used in a block form, with an
+opening and closing tag, and a child template. This form allows you to reuse and
+compose components just like you would HTML elements:
 
-### Return values from a component with `yield`
+```handlebars
+<ModalDialog>
+  You have unsaved progress, are you sure you want to quit?
 
-```handlebars {data-filename=src/ui/routes/index/template.hbs}
-<BlogPost @post={{this.model}} />
+  <button class="btn-danger">
+    Yes
+  </button>
+  <button class="btn">
+    No
+  </button>
+</ModalDialog>
 ```
 
-```handlebars {data-filename=src/ui/components/blog-post/template.hbs}
-{{yield this.post.title this.post.body this.post.author}}
+Users can pass a block to your component, but by default your component doesn't
+know where to put it. You have to decide this by using the `{{yield}}` helper:
+
+```handlebars {data-filename=app/components/modal-dialog/template.hbs}
+<dialog>
+  {{yield}}
+</dialog>
 ```
 
-Here an entire blog post model is being passed to the component as a single component property.
-In turn the component is returning values using `yield`.
-In this case the yielded values are pulled from the post being passed in
-but anything that the component has access to can be yielded, such as an internal property or something from a service.
+Wherever you place the `{{yield}}` helper in your component's template is where
+the template passed to its block will be placed. So in this example, for
+instance, the final rendered output would be:
 
-### Consuming yielded values with block params
+```html
+<dialog>
+  You have unsaved progress, are you sure you want to quit?
 
-The block expression can then use block params to bind names to any yielded values for use in the block.
-This allows for template customization when using a component,
-where the markup is provided by the consuming template,
-but any event handling behavior implemented in the component is retained such as `click()` handlers.
-
-```handlebars {data-filename=src/ui/routes/index/template.hbs}
-<BlogPost @post={{this.model}} as |title body author|>
-  <h2>{{title}}</h2>
-  <p class="author">by {{author}}</p>
-  <p class="post-body">{{body}}</p>
-</BlogPost>
+  <button class="btn-danger">
+    Yes
+  </button>
+  <button class="btn">
+    No
+  </button>
+</dialog>
 ```
 
-The names are bound in the order that they are passed to `yield` in the component template.
+Any valid template constructs can be placed into the block, including other
+components and helpers. If someone uses this component and _doesn't_ pass a
+block, nothing will be rendered in place of the yield:
 
-### Supporting both block and inline component usage in one template
+```handlebars
+<ModalDialog/>
+```
 
-It is possible to support both block and inline usage of a component from a single component template
-using the `has-block` helper.
+Outputs
 
-```handlebars {data-filename=src/ui/components/blog-post/template.hbs}
-{{#if (has-block)}}
-  {{yield this.post.title this.post.body this.post.author}}
-{{else}}
-  <h1>{{this.post.title}}</h1>
-  <p class="author">Authored by {{this.post.author}}</p>
-  <p>{{this.post.body}}</p>
+```html
+<dialog> </dialog>
+```
+
+And vice versa, if you do not yield in the component, and a block is passed,
+then nothing will be done with the block.
+
+### Conditionally Yielding
+
+You can check whether or not a user passed a block to the component with the
+`hasBlock` helper:
+
+```handlebars {data-filename=app/components/modal-dialog/template.hbs}
+<dialog>
+  {{#if hasBlock}}
+    {{yield}}
+  {{else}}
+    Default Message
+  {{/if}}
+</dialog>
+```
+
+Now, if we use our `ModalDialog` component without a block, we'll get the
+default message:
+
+```handlebars
+<ModalDialog/>
+```
+
+Results in:
+
+```html
+<dialog>
+  Default Message
+</dialog>
+```
+
+## Yielding Values
+
+Yield can also pass values _back_ into the template, similar to a callback
+function in JavaScript. Consider for instance the `ModalDialog` component -
+let's say we want to make the dialog show _conditionally_ when we click a
+button:
+
+```handlebars {data-filename=app/components/modal-dialog/template.hbs}
+{{#if this.showModal}}
+  <dialog>
+    {{yield}}
+  <dialog>
 {{/if}}
+
+<button onclick={{this.toggleModal}}>
+  {{@triggerText}}
+</button>
 ```
 
-This has the effect of providing a default template when using a component in the inline form
-but providing yielded values for use with block params when using a block expression.
+```js {data-filename=app/components/modal-dialog/component.js}
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+import { action } from '@ember/object';
+
+export default class ModalDialog extends Component {
+  @tracked showModal = false;
+
+  @action
+  toggleModal() {
+    this.showModal = !this.showModal;
+  }
+}
+```
+
+This works, but when the modal is open, we want users to be able to close it by
+clicking buttons in the modal. There's just one problem - we don't know where
+those buttons are going to be!
+
+What we can do here is _yield_ the `toggleModal` action:
+
+```handlebars {data-filename=app/components/modal-dialog/template.hbs}
+{{#if this.showModal}}
+  <dialog>
+    {{yield this.toggleModal}}
+  <dialog>
+{{/if}}
+
+<button onclick={{this.toggleModal}}>
+  {{@triggerText}}
+</button>
+```
+
+Then, consumers can access the action using the `as |...|` syntax in the block,
+similar to the `{{each}}` helper, and place the action on their buttons:
+
+```handlebars
+<ModalDialog as |toggle|>
+  You have unsaved progress, are you sure you want to quit?
+
+  <button
+    onclick={{toggle}}
+    class="btn-danger"
+  >
+    Yes
+  </button>
+  <button
+    onclick={{toggle}}
+    class="btn"
+  >
+    No
+  </button>
+</ModalDialog>
+```

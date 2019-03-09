@@ -157,36 +157,6 @@ Now we can open and close the modal dialog at will! Next, we'll setup the
 component to send its _own_ events when the user clicks the "OK" and "Cancel"
 buttons.
 
-<!-- ```handlebars {data-filename=src/ui/components/user-profile/template.hbs}
-<ButtonWithConfirmation
-  @text="Click OK to delete your account."
-/>
-```
-
-We'll also want to use the component elsewhere, perhaps like this:
-
-```handlebars {data-filename=src/ui/components/send-message/template.hbs}
-<ButtonWithConfirmation
-  @text="Click OK to send your message."
-/>
-``` -->
-
-<!-- ## Designing the Action
-
-When implementing an action on a component that will be handled outside the
-component, you need to break it down into two steps:
-
-1. In the parent component, decide how you want to react to the action. Here, we
-   want to have the action delete the user's account when it's used in one
-   place, and send a message when used in another place.
-
-2. In the component, determine when something has happened, and when to tell the
-   outside world. Here, we want to trigger the outside action (deleting the
-   account or sending the message) after the user clicks the button and then
-   confirms.
-
-Let's take it step by step. -->
-
 ## Custom Events
 
 Let's create a parent component, the `UserProfile` component, where the user can

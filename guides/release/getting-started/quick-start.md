@@ -76,7 +76,7 @@ In your editor, open `app/templates/application.hbs` and change it to the follow
 
 Ember detects the changed file and automatically reloads the page for you in the background.
 You should see that the welcome page has been replaced by "PeopleTracker".
-You also added an `{{outlet}}` to this page,
+Your page also has an `{{outlet}}`,
 which means that any nested route will be rendered in that place.
 
 ## Define a Route
